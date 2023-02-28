@@ -1,19 +1,18 @@
+import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class StaxStreamProcessor implements AutoCloseable {
 
     private static final XMLInputFactory FACTORY = XMLInputFactory.newInstance();
-    private final XMLStreamReader reader;
+    private final XMLEventReader reader;
 
     public StaxStreamProcessor(InputStreamReader is) throws XMLStreamException {
-        reader = FACTORY.createXMLStreamReader(is);
+        reader = FACTORY.createXMLEventReader(is);
     }
 
-    public XMLStreamReader getReader() {
+    public XMLEventReader getReader() {
         return reader;
     }
 
