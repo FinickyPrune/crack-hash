@@ -1,4 +1,4 @@
-package ru.nsu.kravchenko.crackhash.centralmanager.model;
+package ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus;
 
 import lombok.Data;
 
