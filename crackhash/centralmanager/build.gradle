@@ -66,6 +66,8 @@ dependencies {
 
 	jaxb("org.glassfish.jaxb:jaxb-xjc")
 
+	implementation 'com.sun.xml.bind:jaxb-impl:2.3.1'
+	implementation 'com.sun.xml.messaging.saaj:saaj-impl:1.5.1'
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 	implementation 'javax.activation:activation:1.1'
 	implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.0'

@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
+import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
+import ru.nsu.kravchenko.crackhash.centralmanager.model.dto.OkResponseDTO;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.dto.RequestStatusDTO;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.RequestStatus;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.RequestStatusMapper;
@@ -56,19 +58,19 @@ public class CrackHashService {
     public String crackHash(String hash, int maxLength) {
         var id = UUID.randomUUID().toString().substring(0, 7);
         requests.put(id, new RequestStatus());
-        var crackHashManagerRequest = createCentralManagerRequest(hash, maxLength, id);
+        var managerRequest = createCentralManagerRequest(hash, maxLength, id);
         try {
-            log.info("Sending request to worker: {}", crackHashManagerRequest);
+            log.info("Sending request to worker: {}", managerRequest);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_XML);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-//            restTemplate.exchange(
-//                    String.format("http://%s:%s/internal/api/worker/hash/crack/task", workerIp, workerPort),
-//                    HttpMethod.POST,
-//                    new HttpEntity<>(crackHashManagerRequest, headers),
-//                    OkResponseDTO.class);
+            restTemplate.exchange(
+                    String.format("http://%s:%s/internal/api/worker/hash/crack/task", workerIp, workerPort),
+                    HttpMethod.POST,
+                    new HttpEntity<>(managerRequest, headers),
+                    OkResponseDTO.class);
         } catch (Exception e) {
             log.error("Error while sending request to worker", e);
             return null;
@@ -81,16 +83,16 @@ public class CrackHashService {
         return requestStatusMapper.toRequestStatusDTO(requests.get(requestId));
     }
 
-//    public void handleWorkerCallback(CrackHashWorkerResponse crackHashWorkerResponse) {
-//        log.info("Received response from worker: {}", crackHashWorkerResponse);
-//        RequestStatus requestStatus = requests.get(crackHashWorkerResponse.getRequestId());
-//        if (requestStatus.getStatus() == RequestStatus.Status.IN_PROGRESS) {
-//            if (crackHashWorkerResponse.getAnswers() != null) {
-//                requestStatus.getResult().addAll(crackHashWorkerResponse.getAnswers().getWords());
-//                requestStatus.setStatus(Status.READY);
-//            }
-//        }
-//    }
+    public void handleWorkerCallback(WorkerResponse workerResponse) {
+        log.info("Received response from worker: {}", workerResponse);
+        RequestStatus requestStatus = requests.get(workerResponse.getRequestId());
+        if (requestStatus.getStatus() == Status.IN_PROGRESS) {
+            if (workerResponse.getAnswers() != null) {
+                requestStatus.getResult().addAll(workerResponse.getAnswers().getWords());
+                requestStatus.setStatus(Status.READY);
+            }
+        }
+    }
 
     @Scheduled(fixedDelay = 10000)
     private void expireRequests() {

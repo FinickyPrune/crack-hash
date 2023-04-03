@@ -8,8 +8,7 @@ import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
 @Data
-//@JsonDeserialize(builder = OkResponseDTO.OkResponseDTOBuilder.class)
-@Jacksonized
+@JsonDeserialize(builder = OkResponseDTO.OkResponseDTOBuilder.class)
 @AllArgsConstructor(onConstructor = @__(@JsonCreator))
 @Builder
 public class OkResponseDTO {
