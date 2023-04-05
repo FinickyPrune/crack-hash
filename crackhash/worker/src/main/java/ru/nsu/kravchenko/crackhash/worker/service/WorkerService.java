@@ -29,13 +29,13 @@ public class WorkerService {
     @Value("${crackHashService.manager.port}")
     private Integer managerPort;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(10);
+    ExecutorService executors = Executors.newFixedThreadPool(10);
 
     @Autowired
     private RestTemplate restTemplate;
 
     public void processTask(CentralManagerRequest request) {
-        executorService.execute(() -> { crackCode(request); });
+        executors.execute(() -> { crackCode(request); });
     }
 
     private void crackCode(CentralManagerRequest request){
