@@ -29,7 +29,7 @@ public class WorkerService {
     @Value("${crackHashService.manager.port}")
     private Integer managerPort;
 
-    ExecutorService executors = Executors.newFixedThreadPool(10);
+    ExecutorService executors = Executors.newFixedThreadPool(5);
 
     @Autowired
     private RestTemplate restTemplate;
@@ -52,7 +52,13 @@ public class WorkerService {
     }
 
     private void sendResponse(WorkerResponse response) {
-        String url = String.format("http://%s:%s/api/internal/manager/hash/crack/request", managerIp, managerPort);
+
+        String url = String.format(
+                "http://%s:%s/api/internal/manager/hash/crack/request",
+                managerIp,
+                managerPort
+        );
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         HttpEntity<WorkerResponse> entity = new HttpEntity<>(response, headers);
@@ -62,6 +68,7 @@ public class WorkerService {
                 entity,
                 OkResponseDTO.class
         );
+
     }
 
 }

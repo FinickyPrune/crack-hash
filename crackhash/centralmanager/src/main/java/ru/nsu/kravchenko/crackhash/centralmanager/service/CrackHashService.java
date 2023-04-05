@@ -67,7 +67,11 @@ public class CrackHashService {
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
             restTemplate.exchange(
-                    String.format("http://%s:%s/internal/api/worker/hash/crack/task", workerIp, workerPort),
+                    String.format(
+                            "http://%s:%s/internal/api/worker/hash/crack/task",
+                            workerIp,
+                            workerPort
+                    ),
                     HttpMethod.POST,
                     new HttpEntity<>(managerRequest, headers),
                     OkResponseDTO.class
@@ -97,7 +101,7 @@ public class CrackHashService {
         }
     }
 
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 60 * 1000)
     private void expireRequests() {
         pendingRequests.removeIf(pair -> {
             if (System.currentTimeMillis() - pair.getSecond().getTime() > expireTimeMinutes * 60 * 1000) {
@@ -116,6 +120,7 @@ public class CrackHashService {
     private CentralManagerRequest createCentralManagerRequest(String hash,
                                                               int maxLength,
                                                               String id) {
+
         CentralManagerRequest crackHashManagerRequest = new CentralManagerRequest();
         crackHashManagerRequest.setHash(hash);
         crackHashManagerRequest.setMaxLength(maxLength);
