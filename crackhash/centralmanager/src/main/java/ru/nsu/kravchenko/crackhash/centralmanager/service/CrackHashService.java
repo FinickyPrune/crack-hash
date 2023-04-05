@@ -70,7 +70,8 @@ public class CrackHashService {
                     String.format("http://%s:%s/internal/api/worker/hash/crack/task", workerIp, workerPort),
                     HttpMethod.POST,
                     new HttpEntity<>(managerRequest, headers),
-                    OkResponseDTO.class);
+                    OkResponseDTO.class
+            );
 
         } catch (Exception e) {
             log.error("Error while sending request to worker", e);

@@ -3,7 +3,7 @@
            targetNamespace="http://ccfit.nsu.ru/schema/crack-hash-response">
     <xs:element name="WorkerResponse">
         <xs:annotation>
-            <xs:documentation>Ответ, содержащий строки с совпадающим хэшом</xs:documentation>
+            <xs:documentation>Response containing strings with matching hash</xs:documentation>
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>

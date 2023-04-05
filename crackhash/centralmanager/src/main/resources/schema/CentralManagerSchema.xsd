@@ -4,7 +4,7 @@
            targetNamespace="http://ccfit.nsu.ru/schema/crack-hash-request">
     <xs:element name="CentralManagerRequest">
         <xs:annotation>
-            <xs:documentation>Запрос на взлом хэша в заданном пространстве строк</xs:documentation>
+            <xs:documentation>Query to crack a hash in a given string space</xs:documentation>
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>

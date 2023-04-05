@@ -56,7 +56,11 @@ public class WorkerService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         HttpEntity<WorkerResponse> entity = new HttpEntity<>(response, headers);
-        restTemplate.patchForObject(url, entity, OkResponseDTO.class);
+        restTemplate.patchForObject(
+                url,
+                entity,
+                OkResponseDTO.class
+        );
     }
 
     private WorkerResponse buildResponse(String requestId, int partNumber, List<String> answers) {
