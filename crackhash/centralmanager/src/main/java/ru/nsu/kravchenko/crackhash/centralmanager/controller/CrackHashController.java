@@ -22,14 +22,14 @@ public class CrackHashController {
 
     @PostMapping("/crack")
     public ResponseEntity<RequestIdDTO> crackHash(@RequestBody WorkerRequestDTO request) {
-        log.info("Received request to crack hash: {}", request);
+        log.info("Received request to crack: {}", request);
         return new ResponseEntity<>(
                 new RequestIdDTO(crackHashService.crackHash(request.getHash(), request.getMaxLength())), HttpStatus.OK);
     }
 
     @GetMapping("/status/{requestId}")
     public ResponseEntity<RequestStatusDTO> getStatus(@PathVariable String requestId) {
-        log.info("Received request to get status of request: {}", requestId);
+        log.info("Received statusRequest of request: {}", requestId);
         return new ResponseEntity<>(crackHashService.getStatus(requestId), HttpStatus.OK);
     }
 }

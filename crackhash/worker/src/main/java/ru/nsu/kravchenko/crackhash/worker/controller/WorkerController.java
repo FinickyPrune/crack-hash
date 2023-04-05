@@ -1,6 +1,5 @@
 package ru.nsu.kravchenko.crackhash.worker.controller;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,8 +23,8 @@ public class WorkerController {
 
     @PostMapping(value = "/hash/crack/task", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<OkResponseDTO> getTask(@RequestBody CentralManagerRequest request) {
-        log.info("getTask() : {}", request);
-        workerService.putTask(request);
+        log.info("Received task: {}", request);
+        workerService.processTask(request);
         return ResponseEntity.status(HttpStatus.OK).body(new OkResponseDTO());
     }
 }

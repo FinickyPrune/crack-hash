@@ -19,13 +19,15 @@ import ru.nsu.kravchenko.crackhash.centralmanager.service.CrackHashService;
 @Slf4j
 @RequestMapping("/api/internal/manager")
 public class InternalController {
+
     @Autowired
     CrackHashService crackHashService;
 
     @PatchMapping(value = "/hash/crack/request",  consumes = MediaType.APPLICATION_XML_VALUE)
-    public ResponseEntity<OkResponseDTO> workerCallbackHandler(@RequestBody WorkerResponse crackHashWorkerResponse) {
+    public ResponseEntity<OkResponseDTO> handleWorkerResponse(@RequestBody WorkerResponse crackHashWorkerResponse) {
         log.info("Received worker response: {}", crackHashWorkerResponse);
-        crackHashService.handleWorkerCallback(crackHashWorkerResponse);
+        crackHashService.handleWorkerResponse(crackHashWorkerResponse);
+
         return new ResponseEntity<>(new OkResponseDTO(), HttpStatus.OK);
     }
 }

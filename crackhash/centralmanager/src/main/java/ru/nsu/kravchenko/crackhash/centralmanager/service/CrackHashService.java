@@ -39,13 +39,13 @@ public class CrackHashService {
     private final CentralManagerRequest.Alphabet alphabet = new CentralManagerRequest.Alphabet();
 
     @Value("${centralManagerService.worker.ip}")
-    String workerIp;
+    private String workerIp;
     @Value("${centralManagerService.worker.port}")
-    Integer workerPort;
+    private Integer workerPort;
     @Value("${centralManagerService.manager.expireTimeMinutes}")
-    Integer expireTimeMinutes;
+    private Integer expireTimeMinutes;
     @Value("${centralManagerService.alphabet}")
-    String alphabetString;
+    private String alphabetString;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -71,6 +71,7 @@ public class CrackHashService {
                     HttpMethod.POST,
                     new HttpEntity<>(managerRequest, headers),
                     OkResponseDTO.class);
+
         } catch (Exception e) {
             log.error("Error while sending request to worker", e);
             return null;
@@ -83,12 +84,13 @@ public class CrackHashService {
         return requestStatusMapper.toRequestStatusDTO(requests.get(requestId));
     }
 
-    public void handleWorkerCallback(WorkerResponse workerResponse) {
-        log.info("Received response from worker: {}", workerResponse);
+    public void handleWorkerResponse(WorkerResponse workerResponse) {
+        log.info("Received response from worker");
         RequestStatus requestStatus = requests.get(workerResponse.getRequestId());
         if (requestStatus.getStatus() == Status.IN_PROGRESS) {
             if (workerResponse.getAnswers() != null) {
-                requestStatus.getResult().addAll(workerResponse.getAnswers().getWords());
+                requestStatus.getData().addAll(workerResponse.getAnswers().getWords());
+                log.info("Response answer: {}", workerResponse.getAnswers().getWords());
                 requestStatus.setStatus(Status.READY);
             }
         }
