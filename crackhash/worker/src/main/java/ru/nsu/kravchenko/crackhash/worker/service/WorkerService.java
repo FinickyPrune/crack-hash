@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
 import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
-import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse.Answers;
 import ru.nsu.kravchenko.crackhash.worker.model.cracker.HashCracker;
 import ru.nsu.kravchenko.crackhash.worker.model.dto.OkResponseDTO;
+import ru.nsu.kravchenko.crackhash.worker.service.utils.WorkerResponseBuilder;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -48,7 +48,7 @@ public class WorkerService {
         );
 
         log.info("Finished processing task : {}", request.getRequestId());
-        sendResponse(buildResponse(request.getRequestId(), request.getPartNumber(), answers));
+        sendResponse(WorkerResponseBuilder.buildResponse(request.getRequestId(), request.getPartNumber(), answers));
     }
 
     private void sendResponse(WorkerResponse response) {
@@ -56,22 +56,12 @@ public class WorkerService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         HttpEntity<WorkerResponse> entity = new HttpEntity<>(response, headers);
+
         restTemplate.patchForObject(
                 url,
                 entity,
                 OkResponseDTO.class
         );
-    }
-
-    private WorkerResponse buildResponse(String requestId, int partNumber, List<String> answers) {
-        Answers answer = new Answers();
-        answer.getWords().addAll(answers);
-        WorkerResponse response = new WorkerResponse();
-        response.setRequestId(requestId);
-        response.setPartNumber(partNumber);
-        response.setAnswers(answer);
-
-        return response;
     }
 
 }
