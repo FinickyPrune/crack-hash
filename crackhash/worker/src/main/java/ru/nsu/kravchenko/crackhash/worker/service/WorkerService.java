@@ -19,11 +19,6 @@ import java.util.concurrent.Executors;
 @EnableScheduling
 public class WorkerService {
 
-    @Value("${crackHashService.manager.ip}")
-    private String managerIp;
-    @Value("${crackHashService.manager.port}")
-    private Integer managerPort;
-
     ExecutorService executors = Executors.newFixedThreadPool(5);
 
     @Autowired

@@ -38,10 +38,6 @@ public class CrackHashService {
 
     private final CentralManagerRequest.Alphabet alphabet = new CentralManagerRequest.Alphabet();
 
-    @Value("${centralManagerService.worker.ip}")
-    private String workerIp;
-    @Value("${centralManagerService.worker.port}")
-    private Integer workerPort;
     @Value("${centralManagerService.manager.expireTimeMinutes}")
     private Integer expireTimeMinutes;
     @Value("${centralManagerService.alphabet}")
@@ -57,10 +53,6 @@ public class CrackHashService {
 
     @Autowired
     private RequestsRepository requestsRepository;
-
-
-    @Autowired
-    private RestTemplate restTemplate;
 
     @PostConstruct
     private void init() {
