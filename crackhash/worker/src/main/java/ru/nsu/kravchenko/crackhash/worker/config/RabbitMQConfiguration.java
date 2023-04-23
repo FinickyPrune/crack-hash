@@ -1,21 +1,22 @@
-package ru.nsu.kravchenko.crackhash.centralmanager.config;
+package ru.nsu.kravchenko.crackhash.worker.config;
 
-import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2XmlMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+
+import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitConfiguration {
+public class RabbitMQConfiguration {
 
-    @Value("${crackHashService.manager.queue.input}")
+    @Value("${crackHashService.worker.queue.input}")
     private String inputQueue;
 
-    @Value("${crackHashService.manager.queue.output}")
+    @Value("${crackHashService.worker.queue.output}")
     private String outputQueue;
 
     @Autowired

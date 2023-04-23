@@ -32,7 +32,7 @@ public class WorkerService {
     ExecutorService executors = Executors.newFixedThreadPool(5);
 
     @Autowired
-    private RestTemplate restTemplate;
+    RabbitMQProducer rabbitProducer;
 
     public void processTask(CentralManagerRequest request) {
         executors.execute(() -> { crackCode(request); });
@@ -52,23 +52,7 @@ public class WorkerService {
     }
 
     private void sendResponse(WorkerResponse response) {
-
-        String url = String.format(
-                "http://%s:%s/api/internal/manager/hash/crack/request",
-                managerIp,
-                managerPort
-        );
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_XML);
-        HttpEntity<WorkerResponse> entity = new HttpEntity<>(response, headers);
-
-        restTemplate.patchForObject(
-                url,
-                entity,
-                OkResponseDTO.class
-        );
-
+        rabbitProducer.produce(response);
     }
 
 }
