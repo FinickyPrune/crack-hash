@@ -11,15 +11,27 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.paukov.combinatorics.CombinatoricsFactory.createMultiCombinationGenerator;
+import static org.paukov.combinatorics.CombinatoricsFactory.createPermutationWithRepetitionGenerator;
+
 @Slf4j
 public class HashCracker {
 
-    public static List<String> crack(String inputHash, Integer length, List<String> alphabet) {
+    public static List<String> crack(String inputHash, Integer length, Integer partNumber, Integer partCount, List<String> alphabet) {
         ICombinatoricsVector<String> vector = CombinatoricsFactory.createVector(alphabet);
         List<String> answers = new ArrayList<>();
         for (int i = 1; i <= length; i++) {
-            Generator<String> gen = CombinatoricsFactory.createPermutationWithRepetitionGenerator(vector, i);
-            for (var string : gen) {
+            Generator<String> gen = createPermutationWithRepetitionGenerator(vector, i);
+            long countPermutations = gen.getNumberOfGeneratedObjects();
+            long startIndex = countPermutations / partCount * partNumber;
+            if (countPermutations % partCount != 0 ) {
+                if (partNumber < countPermutations % partCount){
+                    startIndex += partNumber;
+                } else if (partNumber >= countPermutations % partCount) {
+                    startIndex += countPermutations % partCount;
+                }
+            }
+            for (var string : gen.generateObjectsRange(startIndex, startIndex + countPermutations / partCount)) {
                 MessageDigest md5;
                 try {
                     md5 = MessageDigest.getInstance("MD5");
@@ -30,7 +42,7 @@ public class HashCracker {
                 String hash = (new HexBinaryAdapter()).marshal(md5.digest(inputString.getBytes()));
                 if (inputHash.equalsIgnoreCase(hash)) {
                     answers.add(String.join("", string.getVector()));
-                    log.info("Added answer : {}", String.join("", string.getVector()));
+                    log.info("added answer : {}", String.join("", string.getVector()));
                 }
             }
         }

@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfiguration {
 
-    @Value("${crackHashService.manager.queue.input}")
+    @Value("${centralManagerService.queue.input}")
     private String inputQueue;
 
-    @Value("${crackHashService.manager.queue.output}")
+    @Value("${centralManagerService.queue.output}")
     private String outputQueue;
 
     @Autowired

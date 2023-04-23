@@ -21,13 +21,9 @@ public class RabbitMQListener {
     @Autowired
     WorkerService workerService;
 
-    @RabbitListener(queues = "${crackHashService.manager.queue.input}")
-    public void processMessage(CentralManagerRequest message,
-                               Channel channel,
-                               @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+    @RabbitListener(queues = "${crackHashService.worker.queue.input}")
+    public void processMessage(CentralManagerRequest message) {
         log.info("Message received: [{}]", message);
         workerService.processTask(message);
-        channel.basicAck(tag, false);
-
     }
 }

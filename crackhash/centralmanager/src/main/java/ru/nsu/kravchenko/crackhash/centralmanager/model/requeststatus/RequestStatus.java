@@ -1,12 +1,19 @@
 package ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus;
 
-import lombok.Data;
+import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.*;
 
 
-@Data
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@Document("RequestStatus")
 public class RequestStatus {
 
     @Id
@@ -26,7 +33,7 @@ public class RequestStatus {
         this.updated = new Date(System.currentTimeMillis());
         data = new ArrayList<>();
         notAnsweredWorkers = new HashSet<>();
-        for (int i = 0; i < workersCount; i++) {
+        for (int i = 0; i <= workersCount; i++) {
             notAnsweredWorkers.add(i);
         }
     }

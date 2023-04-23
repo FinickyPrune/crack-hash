@@ -39,6 +39,8 @@ public class WorkerService {
         List<String> answers = HashCracker.crack(
                 request.getHash(),
                 request.getMaxLength(),
+                request.getPartNumber(),
+                request.getPartCount(),
                 request.getAlphabet().getSymbols()
         );
 

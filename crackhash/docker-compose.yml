@@ -10,7 +10,7 @@ services:
       - "8081"
     environment:
       - MANAGER_SERVICE_PORT=8081
-      - COUNT_WORKERS=2
+      - COUNT_WORKERS=1
       - MONGO_HOST=mongo
       - RABBIT_HOST=rabbitmq
     links:

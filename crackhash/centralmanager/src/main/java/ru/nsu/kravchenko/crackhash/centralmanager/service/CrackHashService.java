@@ -4,15 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
-import org.springframework.http.*;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
 import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
-import ru.nsu.kravchenko.crackhash.centralmanager.model.dto.OkResponseDTO;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.dto.RequestStatusDTO;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.repository.RequestStatusRepository;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.repository.RequestsRepository;
@@ -22,10 +18,8 @@ import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.RequestSta
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.Status;
 
 import javax.annotation.PostConstruct;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.IntStream;
 
 
@@ -62,7 +56,7 @@ public class CrackHashService {
     public String crackHash(String hash, int maxLength) {
 
         var requestStatus = requestStatusRepository.insert(new RequestStatus(workersCount));
-        IntStream.range(0, workersCount).forEachOrdered(i -> {
+        IntStream.range(0, workersCount).forEach(i -> {
             var managerRequest = createCentralManagerRequest(
                     hash,
                     maxLength,

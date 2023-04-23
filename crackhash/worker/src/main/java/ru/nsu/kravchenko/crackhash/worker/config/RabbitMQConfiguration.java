@@ -30,12 +30,12 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Queue fromWorkersQueue() {
+    public Queue toWorkersQueue() {
         return new Queue(inputQueue, true);
     }
 
     @Bean
-    public Queue toWorkersQueue() {
+    public Queue fromWorkersQueue() {
         return new Queue(outputQueue, true);
     }
 

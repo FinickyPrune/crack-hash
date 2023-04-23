@@ -13,7 +13,7 @@ public class RabbitMQProducer {
 
     private final AmqpTemplate amqpTemplate;
 
-    @Value("${crackHashService.manager.queue.output}")
+    @Value("${crackHashService.worker.queue.output}")
     String outputQueue;
 
     public RabbitMQProducer(AmqpTemplate amqpTemplate) {

@@ -21,7 +21,7 @@ public class RabbitMQProducer implements ConnectionListener {
 
     private final AmqpTemplate amqpTemplate;
 
-    @Value("${crackHashService.manager.queue.output}")
+    @Value("${centralManagerService.queue.output}")
     String outputQueue;
 
     @Autowired
