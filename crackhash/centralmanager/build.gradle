@@ -71,6 +71,11 @@ dependencies {
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 	implementation 'javax.activation:activation:1.1'
 	implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.0'
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb:2.6.5'
+	implementation 'org.springframework.amqp:spring-rabbit:2.4.5'
+
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0'
 }
 
 tasks.named('test') {
