@@ -3,11 +3,16 @@ package ru.nsu.kravchenko.crackhash.worker.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
 import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
 import ru.nsu.kravchenko.crackhash.worker.model.cracker.HashCracker;
+import ru.nsu.kravchenko.crackhash.worker.model.dto.OkResponseDTO;
 import ru.nsu.kravchenko.crackhash.worker.service.utils.WorkerResponseBuilder;
 
 import java.util.List;
