@@ -15,15 +15,22 @@ import java.io.IOException;
 
 @Service
 @Slf4j
-@EnableRabbit //нужно для активации обработки аннотаций @RabbitListener
+@EnableRabbit
 public class RabbitMQListener {
 
     @Autowired
     WorkerService workerService;
 
-    @RabbitListener(queues = "${crackHashService.worker.queue.input}")
-    public void processMessage(CentralManagerRequest message) {
+    @RabbitListener(queues = "${crackHashService.worker.queue.input}", ackMode = "MANUAL")
+    public void processMessage(CentralManagerRequest message, Channel channel,
+                               @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         log.info("Message received: [{}]", message);
-        workerService.processTask(message);
+        var response = workerService.processTask(message);
+        try {
+            channel.basicAck(tag, false);
+            workerService.sendResponse(response);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 }

@@ -1,5 +1,8 @@
 package ru.nsu.kravchenko.crackhash.worker.config;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2XmlMessageConverter;
@@ -15,12 +18,21 @@ public class RabbitMQConfiguration {
 
     @Value("${crackHashService.worker.queue.input}")
     private String inputQueue;
-
-    @Value("${crackHashService.worker.queue.output}")
-    private String outputQueue;
+    @Value("${worker.input.exchange}")
+    private String inputExchange;
+    @Value("${worker.input.routing}")
+    private String inputRouting;
 
     @Autowired
     private CachingConnectionFactory connectionFactory;
+
+    @Bean
+    public DirectExchange inputExchange() { return new DirectExchange(inputExchange); }
+
+    @Bean
+    public Binding binding(Queue queue, DirectExchange directExchange) {
+        return BindingBuilder.bind(queue).to(directExchange).with(inputRouting);
+    }
 
     @Bean
     public RabbitTemplate rabbitTemplate() {
@@ -32,11 +44,6 @@ public class RabbitMQConfiguration {
     @Bean
     public Queue toWorkersQueue() {
         return new Queue(inputQueue, true);
-    }
-
-    @Bean
-    public Queue fromWorkersQueue() {
-        return new Queue(outputQueue, true);
     }
 
     @Bean

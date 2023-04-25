@@ -80,6 +80,12 @@ public class CrackHashService {
                 requestStatus.getData().addAll(workerResponse.getAnswers().getWords());
                 requestStatus.getNotAnsweredWorkers().remove(workerResponse.getPartNumber());
                 log.info("Response answer: {}", workerResponse.getAnswers().getWords());
+
+                requestsRepository.deleteRequestsByRequestIdAndPartNumber(
+                        requestStatus.getRequestId(),
+                        workerResponse.getPartNumber()
+                );
+
                 if (requestStatus.getNotAnsweredWorkers().isEmpty()) {
                     requestStatus.setStatus(Status.READY);
                 }
@@ -88,17 +94,15 @@ public class CrackHashService {
         }
     }
 
-    @Scheduled(fixedDelay = 60 * 1000)
-    private void expireRequests() {
+    @Scheduled(fixedDelay = 20 * 1000)
+    private void checkRequests() {
 
-        requestStatusRepository.findAllByUpdatedBeforeAndStatusEquals(
-                new Date(System.currentTimeMillis() - expireTimeMinutes * 60 * 1000),
-                Status.IN_PROGRESS).forEach(requestStatus -> {
+        requestsRepository.findAllByUpdatedBefore(
+                new Date(System.currentTimeMillis() - expireTimeMinutes * 60 * 1000))
+                .forEach( request -> {
+//                    trySendTask(request.getRequest());
+                });
 
-                requestStatus.setStatus(Status.ERROR);
-                requestStatusRepository.save(requestStatus);
-
-        });
     }
 
     private CentralManagerRequest createCentralManagerRequest(String hash,
@@ -118,8 +122,8 @@ public class CrackHashService {
     }
 
     private void trySendTask(CentralManagerRequest crackHashManagerRequest) {
-        if (!rabbitProducer.trySendMessage(crackHashManagerRequest)) {
-            requestsRepository.insert(new Request(crackHashManagerRequest));
-        }
+        requestsRepository.insert(new Request(crackHashManagerRequest));
+        rabbitProducer.trySendMessage(crackHashManagerRequest);
     }
+
 }

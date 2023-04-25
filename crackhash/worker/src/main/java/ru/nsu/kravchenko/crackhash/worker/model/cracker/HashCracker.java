@@ -11,7 +11,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.paukov.combinatorics.CombinatoricsFactory.createMultiCombinationGenerator;
 import static org.paukov.combinatorics.CombinatoricsFactory.createPermutationWithRepetitionGenerator;
 
 @Slf4j

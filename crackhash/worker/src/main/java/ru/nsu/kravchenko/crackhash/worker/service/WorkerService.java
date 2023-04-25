@@ -2,39 +2,39 @@ package ru.nsu.kravchenko.crackhash.worker.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
 import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
 import ru.nsu.kravchenko.crackhash.worker.model.cracker.HashCracker;
-import ru.nsu.kravchenko.crackhash.worker.model.dto.OkResponseDTO;
 import ru.nsu.kravchenko.crackhash.worker.service.utils.WorkerResponseBuilder;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 @Service
 @Slf4j
 @EnableScheduling
 public class WorkerService {
 
-    ExecutorService executors = Executors.newFixedThreadPool(5);
-
     @Autowired
     RabbitMQProducer rabbitProducer;
 
-    public void processTask(CentralManagerRequest request) {
-        executors.execute(() -> { crackCode(request); });
+     List<WorkerResponse> tasksToSend = Collections.synchronizedList(new ArrayList<>());
+
+    public WorkerResponse processTask(CentralManagerRequest request) {
+        return crackCode(request);
     }
 
-    private void crackCode(CentralManagerRequest request){
+    private WorkerResponse crackCode(CentralManagerRequest request) {
         log.info("Started processing task: {}", request.getRequestId());
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            log.error(e.getLocalizedMessage());
+        }
 
         List<String> answers = HashCracker.crack(
                 request.getHash(),
@@ -45,11 +45,19 @@ public class WorkerService {
         );
 
         log.info("Finished processing task : {}", request.getRequestId());
-        sendResponse(WorkerResponseBuilder.buildResponse(request.getRequestId(), request.getPartNumber(), answers));
+        var response = WorkerResponseBuilder.buildResponse(
+                request.getRequestId(),
+                request.getPartNumber(),
+                answers
+        );
+        tasksToSend.add(response);
+        return response;
     }
 
-    private void sendResponse(WorkerResponse response) {
-        rabbitProducer.produce(response);
+    public void sendResponse(WorkerResponse response) {
+        if (rabbitProducer.produce(response)) {
+            tasksToSend.remove(response);
+        }
     }
 
 }

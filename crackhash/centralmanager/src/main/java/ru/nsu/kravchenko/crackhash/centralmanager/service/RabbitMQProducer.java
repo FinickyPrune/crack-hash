@@ -1,8 +1,10 @@
 package ru.nsu.kravchenko.crackhash.centralmanager.service;
 
+import com.rabbitmq.client.ShutdownSignalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionListener;
@@ -21,9 +23,10 @@ public class RabbitMQProducer implements ConnectionListener {
 
     private final AmqpTemplate amqpTemplate;
 
-    @Value("${centralManagerService.queue.output}")
-    String outputQueue;
-
+    @Value("${worker.input.exchange}")
+    private String outputExchange;
+    @Value("${worker.input.routing}")
+    private String outputRouting;
     @Autowired
     private RequestsRepository crackTaskRequestRepository;
 
@@ -35,7 +38,11 @@ public class RabbitMQProducer implements ConnectionListener {
 
     public boolean trySendMessage(CentralManagerRequest request) {
         try {
-            amqpTemplate.convertAndSend(outputQueue, request);
+            amqpTemplate.convertAndSend(outputExchange, outputRouting, request, message -> {
+                message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+                return message;
+            });
+
             log.info("Set {} part of {} task request was sent", request.getPartNumber(), request.getRequestId());
             return true;
         } catch (AmqpException ex) {
@@ -46,11 +53,19 @@ public class RabbitMQProducer implements ConnectionListener {
 
     @Override
     public void onCreate(Connection connection) {
-        List<Request> requests = crackTaskRequestRepository.findAll();
-        for (var request : requests) {
-            trySendMessage(request.getRequest());
-            crackTaskRequestRepository.delete(request);
-        }
+        crackTaskRequestRepository.findAll().forEach(request -> {
+//            trySendMessage(request.getRequest());
+        });
+    }
+
+    @Override
+    public void onClose(Connection connection) {
+        log.debug("Connection closed {}", connection.toString());
+    }
+
+    @Override
+    public void onShutDown(ShutdownSignalException signal) {
+        log.debug("Connection shutdown {}", signal.getReason());
     }
 
 }

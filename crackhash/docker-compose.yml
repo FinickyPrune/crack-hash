@@ -10,7 +10,7 @@ services:
       - "8081"
     environment:
       - MANAGER_SERVICE_PORT=8081
-      - COUNT_WORKERS=1
+      - COUNT_WORKERS=2
       - MONGO_HOST=mongo
       - RABBIT_HOST=rabbitmq
     links:
@@ -43,6 +43,12 @@ services:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: pass
       RABBITMQ_DEFAULT_VHOST: /
+      MANGER_TO_WORKER_QUEUE: worker.input.queue
+      MANGER_TO_WORKER_EXCHANGE: worker.input.exchange
+      MANGER_TO_WORKER_ROUTING: worker.input.routing
+      WORKER_TO_MANAGER_QUEUE: manager.input.queue
+      WORKER_TO_MANAGER_EXCHANGE: manager.input.exchange
+      WORKER_TO_MANAGER_ROUTING: manager.input.routing
     networks:
       - my-network
 
