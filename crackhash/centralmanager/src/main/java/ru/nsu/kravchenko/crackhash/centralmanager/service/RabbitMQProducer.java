@@ -46,7 +46,7 @@ public class RabbitMQProducer implements ConnectionListener {
             log.info("Set {} part of {} task request was sent", request.getPartNumber(), request.getRequestId());
             return true;
         } catch (AmqpException ex) {
-            log.error("Failed to send request '{}', cached message", request.getRequestId());
+            log.error("Failed to send request '{}'", request.getRequestId());
             return false;
         }
     }
@@ -54,7 +54,7 @@ public class RabbitMQProducer implements ConnectionListener {
     @Override
     public void onCreate(Connection connection) {
         crackTaskRequestRepository.findAll().forEach(request -> {
-//            trySendMessage(request.getRequest());
+            trySendMessage(request.getRequest());
         });
     }
 

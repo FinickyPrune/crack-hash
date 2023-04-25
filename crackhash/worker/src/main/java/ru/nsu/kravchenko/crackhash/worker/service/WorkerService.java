@@ -9,8 +9,6 @@ import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
 import ru.nsu.kravchenko.crackhash.worker.model.cracker.HashCracker;
 import ru.nsu.kravchenko.crackhash.worker.service.utils.WorkerResponseBuilder;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -21,8 +19,6 @@ public class WorkerService {
 
     @Autowired
     RabbitMQProducer rabbitProducer;
-
-     List<WorkerResponse> tasksToSend = Collections.synchronizedList(new ArrayList<>());
 
     public WorkerResponse processTask(CentralManagerRequest request) {
         return crackCode(request);
@@ -50,14 +46,11 @@ public class WorkerService {
                 request.getPartNumber(),
                 answers
         );
-        tasksToSend.add(response);
         return response;
     }
 
     public void sendResponse(WorkerResponse response) {
-        if (rabbitProducer.produce(response)) {
-            tasksToSend.remove(response);
-        }
+        rabbitProducer.produce(response);
     }
 
 }

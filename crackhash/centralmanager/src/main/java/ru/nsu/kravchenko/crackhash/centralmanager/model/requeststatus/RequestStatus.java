@@ -33,7 +33,7 @@ public class RequestStatus {
         this.updated = new Date(System.currentTimeMillis());
         data = new ArrayList<>();
         notAnsweredWorkers = new HashSet<>();
-        for (int i = 0; i <= workersCount; i++) {
+        for (int i = 0; i < workersCount; i++) {
             notAnsweredWorkers.add(i);
         }
     }

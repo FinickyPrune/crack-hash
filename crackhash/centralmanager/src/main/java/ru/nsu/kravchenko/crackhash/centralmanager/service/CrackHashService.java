@@ -16,6 +16,7 @@ import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.Request;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.RequestStatus;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.RequestStatusMapper;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.Status;
+import ru.nsu.kravchenko.crackhash.centralmanager.service.utils.CentralManagerRequestBuilder;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
@@ -28,12 +29,8 @@ import java.util.stream.IntStream;
 @EnableScheduling
 public class CrackHashService {
 
-    private final RequestStatusMapper requestStatusMapper = RequestStatusMapper.INSTANCE;
-
     private final CentralManagerRequest.Alphabet alphabet = new CentralManagerRequest.Alphabet();
 
-    @Value("${centralManagerService.manager.expireTimeMinutes}")
-    private Integer expireTimeMinutes;
     @Value("${centralManagerService.alphabet}")
     private String alphabetString;
     @Value("${centralManagerService.workersCount}")
@@ -49,27 +46,28 @@ public class CrackHashService {
     private RequestsRepository requestsRepository;
 
     @PostConstruct
-    private void init() {
-        List.of(alphabetString.split("")).forEach(alphabet.getSymbols()::add);
-    }
+    private void init() { List.of(alphabetString.split("")).forEach(alphabet.getSymbols()::add); }
 
     public String crackHash(String hash, int maxLength) {
 
         var requestStatus = requestStatusRepository.insert(new RequestStatus(workersCount));
         IntStream.range(0, workersCount).forEach(i -> {
-            var managerRequest = createCentralManagerRequest(
+            var managerRequest = CentralManagerRequestBuilder.build(
                     hash,
                     maxLength,
                     requestStatus.getRequestId(),
-                    i
+                    i,
+                    workersCount,
+                    alphabet
             );
+            requestsRepository.insert(new Request(managerRequest));
             trySendTask(managerRequest);
         });
         return requestStatus.getRequestId();
     }
 
     public RequestStatusDTO getStatus(String requestId) {
-        return requestStatusMapper.toRequestStatusDTO(requestStatusRepository.findByRequestId(requestId));
+        return RequestStatusMapper.INSTANCE.toRequestStatusDTO(requestStatusRepository.findByRequestId(requestId));
     }
 
     public void handleWorkerResponse(WorkerResponse workerResponse) {
@@ -77,9 +75,11 @@ public class CrackHashService {
         var requestStatus = requestStatusRepository.findByRequestId(workerResponse.getRequestId());
         if (requestStatus.getStatus() == Status.IN_PROGRESS) {
             if (workerResponse.getAnswers() != null) {
-                requestStatus.getData().addAll(workerResponse.getAnswers().getWords());
+                if (!requestStatus.getData().containsAll((workerResponse.getAnswers().getWords()))) { // in case Rabbit restarts and make already ready request
+                    requestStatus.getData().addAll(workerResponse.getAnswers().getWords());
+                    log.info("Response answer: {}", workerResponse.getAnswers().getWords());
+                }
                 requestStatus.getNotAnsweredWorkers().remove(workerResponse.getPartNumber());
-                log.info("Response answer: {}", workerResponse.getAnswers().getWords());
 
                 requestsRepository.deleteRequestsByRequestIdAndPartNumber(
                         requestStatus.getRequestId(),
@@ -94,35 +94,7 @@ public class CrackHashService {
         }
     }
 
-    @Scheduled(fixedDelay = 20 * 1000)
-    private void checkRequests() {
-
-        requestsRepository.findAllByUpdatedBefore(
-                new Date(System.currentTimeMillis() - expireTimeMinutes * 60 * 1000))
-                .forEach( request -> {
-//                    trySendTask(request.getRequest());
-                });
-
-    }
-
-    private CentralManagerRequest createCentralManagerRequest(String hash,
-                                                              int maxLength,
-                                                              String id,
-                                                              int partNumber) {
-
-        CentralManagerRequest crackHashManagerRequest = new CentralManagerRequest();
-        crackHashManagerRequest.setHash(hash);
-        crackHashManagerRequest.setMaxLength(maxLength);
-        crackHashManagerRequest.setRequestId(id);
-        crackHashManagerRequest.setPartNumber(partNumber);
-        crackHashManagerRequest.setPartCount(workersCount);
-        crackHashManagerRequest.setAlphabet(alphabet);
-
-        return  crackHashManagerRequest;
-    }
-
     private void trySendTask(CentralManagerRequest crackHashManagerRequest) {
-        requestsRepository.insert(new Request(crackHashManagerRequest));
         rabbitProducer.trySendMessage(crackHashManagerRequest);
     }
 
