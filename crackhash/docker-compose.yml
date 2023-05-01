@@ -11,10 +11,12 @@ services:
     environment:
       - MANAGER_SERVICE_PORT=8081
       - COUNT_WORKERS=2
-      - MONGO_HOST=mongo
       - RABBIT_HOST=rabbitmq
+      - MONGO_URI=mongo1:27017,mongo2:27017,mongo3:27017/crack_db?replicaSet=rs0
     links:
-      - mongo
+      - mongo1
+      - mongo2
+      - mongo3
       - rabbitmq
     networks:
       - my-network
@@ -38,7 +40,6 @@ services:
     restart: always
     ports:
       - "5672:5672"
-      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: pass
@@ -52,19 +53,44 @@ services:
     networks:
       - my-network
 
-  mongo:
-    image: mongo:latest
-    command: mongod --auth --port 27017
+  mongo1:
+    container_name: mongo1
+    image: mongo:4.4
+    command: bash -c "mongod --replSet rs0 --bind_ip_all && ./scripts/init.sh"
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin_password
-      MONGO_INITDB_DATABASE: crack_hash_db
+      - ~/mongors/data1:/data/db
+      - ./rs-init.sh:/scripts/init.sh
     networks:
       - my-network
+    depends_on:
+      - mongo2
+      - mongo3
+    links:
+      - mongo2
+      - mongo3
+    restart: always
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:4.4
+    volumes:
+      - ~/mongors/data2:/data/db
+    networks:
+      - my-network
+    restart: always
+    command: mongod --bind_ip_all --replSet rs0
+
+  mongo3:
+    container_name: mongo3
+    image: mongo:4.4
+    volumes:
+      - ~/mongors/data3:/data/db
+    networks:
+      - my-network
+    restart: always
+    command: mongod --bind_ip_all --replSet rs0
 
 networks:
   my-network:
