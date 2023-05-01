@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
-import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
 
 import java.io.IOException;
 
@@ -25,10 +24,10 @@ public class RabbitMQListener {
     public void processMessage(CentralManagerRequest message, Channel channel,
                                @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         log.info("Message received: [{}]", message);
-        var response = workerService.processTask(message);
+        var response = workerService.process(message);
         try {
             channel.basicAck(tag, false);
-            workerService.sendResponse(response);
+            workerService.send(response);
         } catch (IOException e) {
             log.error(e.getMessage());
         }

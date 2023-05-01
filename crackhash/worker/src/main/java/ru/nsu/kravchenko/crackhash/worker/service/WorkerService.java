@@ -20,7 +20,7 @@ public class WorkerService {
     @Autowired
     RabbitMQProducer rabbitProducer;
 
-    public WorkerResponse processTask(CentralManagerRequest request) {
+    public WorkerResponse process(CentralManagerRequest request) {
         return crackCode(request);
     }
 
@@ -49,7 +49,7 @@ public class WorkerService {
         return response;
     }
 
-    public void sendResponse(WorkerResponse response) {
+    public void send(WorkerResponse response) {
         rabbitProducer.produce(response);
     }
 

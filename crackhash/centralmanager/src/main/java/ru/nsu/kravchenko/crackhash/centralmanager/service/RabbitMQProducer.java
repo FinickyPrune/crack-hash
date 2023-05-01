@@ -60,12 +60,12 @@ public class RabbitMQProducer implements ConnectionListener {
 
     @Override
     public void onClose(Connection connection) {
-        log.debug("Connection closed {}", connection.toString());
+        log.info("Connection closed {}", connection.toString());
     }
 
     @Override
     public void onShutDown(ShutdownSignalException signal) {
-        log.debug("Connection shutdown {}", signal.getReason());
+        log.info("Connection shutdown {}", signal.getReason());
     }
 
 }
