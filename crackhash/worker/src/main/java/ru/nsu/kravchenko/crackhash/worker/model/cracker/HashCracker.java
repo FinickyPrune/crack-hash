@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.paukov.combinatorics.CombinatoricsFactory.createPermutationWithRepetitionGenerator;
@@ -30,20 +31,34 @@ public class HashCracker {
                     startIndex += countPermutations % partCount;
                 }
             }
-            for (var string : gen.generateObjectsRange(startIndex, startIndex + countPermutations / partCount)) {
-                MessageDigest md5;
-                try {
-                    md5 = MessageDigest.getInstance("MD5");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
+            var iterator = gen.iterator();
+            long stopIndex = startIndex + countPermutations / partCount;
+            long index = 1;
+            while (iterator.hasNext()) {
+                if (index >= startIndex && index <= stopIndex) {
+
+                    var string = iterator.next();
+                    MessageDigest md5;
+                    try {
+                        md5 = MessageDigest.getInstance("MD5");
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                    String inputString = String.join("", string.getVector());
+                    String hash = (new HexBinaryAdapter()).marshal(md5.digest(inputString.getBytes()));
+                    if (inputHash.equalsIgnoreCase(hash)) {
+                        answers.add(String.join("", string.getVector()));
+                        log.info("added answer : {}", String.join("", string.getVector()));
+                    }
+                } else if (index > stopIndex) {
+                    break;
+                } else {
+                    iterator.next();
                 }
-                String inputString = String.join("", string.getVector());
-                String hash = (new HexBinaryAdapter()).marshal(md5.digest(inputString.getBytes()));
-                if (inputHash.equalsIgnoreCase(hash)) {
-                    answers.add(String.join("", string.getVector()));
-                    log.info("added answer : {}", String.join("", string.getVector()));
-                }
+                index++;
             }
+            log.info(String.valueOf(answers));
+
         }
 
         return answers;
