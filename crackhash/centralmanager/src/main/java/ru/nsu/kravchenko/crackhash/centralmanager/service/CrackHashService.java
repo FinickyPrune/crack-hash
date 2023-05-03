@@ -5,8 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.nsu.ccfit.schema.crack_hash_request.CentralManagerRequest;
 import ru.nsu.ccfit.schema.crack_hash_response.WorkerResponse;
 import ru.nsu.kravchenko.crackhash.centralmanager.model.dto.RequestStatusDTO;
@@ -19,7 +20,6 @@ import ru.nsu.kravchenko.crackhash.centralmanager.model.requeststatus.Status;
 import ru.nsu.kravchenko.crackhash.centralmanager.service.utils.CentralManagerRequestBuilder;
 
 import javax.annotation.PostConstruct;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -40,7 +40,7 @@ public class CrackHashService {
     private RabbitMQProducer rabbitProducer;
 
     @Autowired
-    private RequestStatusRepository requestStatusRepository;
+    private RequestStatusRepository statusRepository;
 
     @Autowired
     private RequestsRepository requestsRepository;
@@ -50,7 +50,7 @@ public class CrackHashService {
 
     public String crackHash(String hash, int maxLength) {
 
-        var requestStatus = requestStatusRepository.insert(new RequestStatus(workersCount));
+        var requestStatus = statusRepository.insert(new RequestStatus(workersCount));
         IntStream.range(0, workersCount).forEach(i -> {
             var managerRequest = CentralManagerRequestBuilder.build(
                     hash,
@@ -67,12 +67,13 @@ public class CrackHashService {
     }
 
     public RequestStatusDTO getStatus(String requestId) {
-        return RequestStatusMapper.INSTANCE.toRequestStatusDTO(requestStatusRepository.findByRequestId(requestId));
+        return RequestStatusMapper.INSTANCE.toRequestStatusDTO(statusRepository.findByRequestId(requestId));
     }
 
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void handleWorkerResponse(WorkerResponse workerResponse) {
         log.info("Received response from worker");
-        var requestStatus = requestStatusRepository.findByRequestId(workerResponse.getRequestId());
+        var requestStatus = statusRepository.findByRequestId(workerResponse.getRequestId());
         if (requestStatus.getStatus() == Status.IN_PROGRESS) {
             if (workerResponse.getAnswers() != null) {
                 if (!requestStatus.getData().containsAll((workerResponse.getAnswers().getWords()))) { // in case Rabbit restarts and make already ready request
@@ -89,7 +90,7 @@ public class CrackHashService {
                 if (requestStatus.getNotAnsweredWorkers().isEmpty()) {
                     requestStatus.setStatus(Status.READY);
                 }
-                requestStatusRepository.save(requestStatus);
+                statusRepository.save(requestStatus);
             }
         }
     }
