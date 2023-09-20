@@ -1,0 +1,125 @@
+version: '3'
+services:
+  manager:
+    build:
+      context: ./centralmanager
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    expose:
+      - "8081"
+    environment:
+      - MANAGER_SERVICE_PORT=8081
+      - COUNT_WORKERS=2
+      - RABBIT_HOST=rabbitmq
+      - MONGO_URI=mongo1:27017,mongo2:27017,mongo3:27017/crack_db?replicaSet=rs0
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      mongo3:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - my-network
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBIT_HOST=rabbitmq
+    networks:
+      - my-network
+
+  rabbitmq:
+    image: rabbitmq:latest
+    restart: always
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: pass
+      RABBITMQ_DEFAULT_VHOST: /
+      MANGER_TO_WORKER_QUEUE: worker.input.queue
+      MANGER_TO_WORKER_EXCHANGE: worker.input.exchange
+      MANGER_TO_WORKER_ROUTING: worker.input.routing
+      WORKER_TO_MANAGER_QUEUE: manager.input.queue
+      WORKER_TO_MANAGER_EXCHANGE: manager.input.exchange
+      WORKER_TO_MANAGER_ROUTING: manager.input.routing
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl node_health_check" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - my-network
+
+  mongo1:
+    container_name: mongo1
+    image: mongo:4.4
+    command: bash -c "mongod --replSet rs0 --bind_ip_all && ./scripts/init.sh"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ~/mongors/data1:/data/db
+      - ./rs-init.sh:/scripts/init.sh
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "'quit(db.getSiblingDB(\"admin\").runCommand({replSetGetStatus: 1}).myState == 1 ? 0 : 1)'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - my-network
+    depends_on:
+      - mongo2
+      - mongo3
+    links:
+      - mongo2
+      - mongo3
+    restart: always
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:4.4
+    volumes:
+      - ~/mongors/data2:/data/db
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "'quit(db.getSiblingDB(\"admin\").runCommand({replSetGetStatus: 1}).myState == 2 ? 0 : 1)'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - my-network
+    restart: always
+    command: mongod --bind_ip_all --replSet rs0
+
+  mongo3:
+    container_name: mongo3
+    image: mongo:4.4
+    volumes:
+      - ~/mongors/data3:/data/db
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "'quit(db.getSiblingDB(\"admin\").runCommand({replSetGetStatus: 1}).myState == 2 ? 0 : 1)'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - my-network
+    restart: always
+    command: mongod --bind_ip_all --replSet rs0
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
